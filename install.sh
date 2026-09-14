@@ -40,6 +40,8 @@ echo "  /tdd                   — цикл «красный → зелёный 
 echo "  /wiki-ingest           — сохранить знания сессии в вики проекта"
 echo "  /wiki-query            — ответить на вопрос по накопленной вики"
 echo "  /init                  — скан репозитория и обновление CLAUDE.md проекта"
+echo "  /handoff-ingest        — передача дел при закрытии распухшего чата"
+echo "  /handoff-query         — приём передачи дел в новом чате"
 echo ""
 echo "Твой личный ~/.claude/CLAUDE.md не изменён."
 echo "Общие правила работы над проектами: $SCRIPT_DIR/TEAM-RULES.md"
