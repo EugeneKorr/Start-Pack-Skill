@@ -28,6 +28,21 @@ for cmd in "$SCRIPT_DIR/commands/"*.md; do
     echo "✓ Команда: ~/.claude/commands/$name"
 done
 
+# Инструменты команд (скрипты замера для /handoff-*, /economy; лимиты подписки) → ~/.claude/tools/
+if [ -d "$SCRIPT_DIR/tools" ]; then
+    for tool in "$SCRIPT_DIR"/tools/*/*; do
+        rel="${tool#$SCRIPT_DIR/tools/}"
+        dest="$CLAUDE_DIR/tools/$rel"
+        mkdir -p "$(dirname "$dest")"
+        if [ -f "$dest" ] && ! cmp -s "$tool" "$dest"; then
+            cp "$dest" "$dest.bak.$(date +%Y%m%d_%H%M%S)"
+            echo "• Сохранил прежнюю версию: tools/$rel.bak.*"
+        fi
+        cp "$tool" "$dest" && chmod +x "$dest"
+        echo "✓ Инструмент: ~/.claude/tools/$rel"
+    done
+fi
+
 echo ""
 echo "=== Готово! ==="
 echo ""
@@ -45,6 +60,7 @@ echo "  /wiki-query            — ответить на вопрос по на�
 echo "  /init                  — скан репозитория и обновление CLAUDE.md проекта"
 echo "  /handoff-ingest        — передача дел при закрытии распухшего чата"
 echo "  /handoff-query         — приём передачи дел в новом чате"
+echo "  /economy               — режим экономии токенов: усилие, модель нити, агенты, хендофф"
 echo ""
 echo "Твой личный ~/.claude/CLAUDE.md не изменён."
 echo "Общие правила работы над проектами: $SCRIPT_DIR/TEAM-RULES.md"
