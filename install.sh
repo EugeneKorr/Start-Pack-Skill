@@ -28,6 +28,22 @@ for cmd in "$SCRIPT_DIR/commands/"*.md; do
     echo "✓ Команда: ~/.claude/commands/$name"
 done
 
+# Вспомогательные скрипты команд (handoff: замер токенов и очищенный разговор)
+for tool in "$SCRIPT_DIR/tools/"*/*; do
+    [ -f "$tool" ] || continue
+    rel="${tool#$SCRIPT_DIR/tools/}"
+    dest="$CLAUDE_DIR/tools/$rel"
+    mkdir -p "$(dirname "$dest")"
+    if [ -f "$dest" ] && ! cmp -s "$tool" "$dest"; then
+        cp "$dest" "$dest.bak.$(date +%Y%m%d_%H%M%S)"
+        echo "• Сохранил прежнюю версию: tools/$rel.bak.*"
+    fi
+    cp "$tool" "$dest"
+    echo "✓ Скрипт:  ~/.claude/tools/$rel"
+done
+
+command -v jq >/dev/null || echo "⚠ Не найден jq — он нужен /handoff-ingest и /handoff-query (brew install jq)"
+
 echo ""
 echo "=== Готово! ==="
 echo ""
