@@ -120,7 +120,7 @@ claude -p "/ticket-$ROLE $EXTRA" \
   --model "$MODEL" \
   --settings "$GEN" \
   --add-dir "$DIR" "$WORKTREES" "${REPOS[@]}" \
-  -n "🤖 агент: $ROLE $(date +%d.%m\ %H:%M)" >> "$LOG" 2>&1 || echo "!!! exit $?" >> "$LOG"
+  -n "🤖 агент: $ROLE $(date +%d.%m\ %H:%M)" < /dev/null >> "$LOG" 2>&1 || echo "!!! exit $?" >> "$LOG"
 
 # Срочное: watch.py оставляет метку p0.pending — после сбора сразу фиксер.
 # Метка переживает занятую блокировку: если сбор по сигналу не стартовал, её подхватит следующий сбор.

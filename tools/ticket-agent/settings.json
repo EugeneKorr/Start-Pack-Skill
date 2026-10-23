@@ -46,6 +46,7 @@
       "Bash(~/.claude/tools/ticket-agent/signals.sh:*)",
       "Bash(~/.claude/tools/ticket-agent/state.sh:*)",
       "Bash(~/.claude/tools/ticket-agent/push-branch.sh)",
+      "Bash(~/.claude/tools/ticket-agent/journal.sh:*)",
       "mcp__telegram__get_history",
       "mcp__telegram__list_messages",
       "mcp__telegram__get_messages",

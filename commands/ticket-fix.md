@@ -49,4 +49,5 @@ push и PR). Настройки: `~/.claude/ticket-agent/config.json`, реес�
 --add-label агент:разбор`. Worktree оставь.
 
 ## Журнал
-Раздел «фикс HH:MM» в `~/.claude/ticket-agent/runs/<ГГГГ-ММ-ДД>.md`: тикеты, PR, время, неудачи.
+Раздел «фикс HH:MM» в журнал через
+`~/.claude/tools/ticket-agent/journal.sh <<'EOF' … EOF` (писать в `~/.claude` напрямую нельзя): тикеты, PR, время, неудачи.
