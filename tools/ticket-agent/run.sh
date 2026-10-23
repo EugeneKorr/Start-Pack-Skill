@@ -88,6 +88,15 @@ if dry:
 json.dump(s, open(out, "w"), ensure_ascii=False, indent=2)
 PY
 
+# Долгоживущий токен для безлюдного режима (`claude setup-token`): строка
+# CLAUDE_CODE_OAUTH_TOKEN=… в auth.env (chmod 600). Без него — обычный вход CLI, который протухает.
+if [ -f "$DIR/auth.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$DIR/auth.env"
+  set +a
+fi
+
 cd "$DIR"
 claude -p "/ticket-$ROLE $EXTRA" \
   --model "$MODEL" \
