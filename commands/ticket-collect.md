@@ -18,7 +18,8 @@ GitHub и не двигать курсоры, только журнал). Сро
 
 ## По каждому проекту и каждому его источнику
 Курсор: `~/.claude/tools/ticket-agent/state.sh get "<проект>:<модуль>:<id>"`, где id —
-`chat_id` / `repo` / `table`.
+`chat_id` / `repo` / `table`. **Курсора нет (первый запуск источника)** — бери только последние
+3 дня (`from_date` для Telegram, `createdAt` для issues), не всю историю.
 
 Модули:
 - `telegram-chat` — сообщения после курсора: `mcp__telegram__list_messages` (chat_id из

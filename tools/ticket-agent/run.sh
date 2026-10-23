@@ -68,13 +68,23 @@ mkdir -p "$WORKTREES"
 echo "=== $(date '+%F %T') $ROLE $EXTRA" >> "$LOG"
 
 # Настройки прогона: базовые + запрет Edit/Write в рабочих деревьях репо (агент правит только worktree).
+# Сухой прогон (--dry): дополнительно запрещены все записи наружу — GitHub, push, курсоры, Telegram.
 GEN="$DIR/settings.generated.json"
-python3 -I - "$TOOLS/settings.json" "$GEN" "${REPOS[@]}" <<'PY'
+DRY=0; [[ "$EXTRA" == *--dry* ]] && DRY=1
+python3 -I - "$TOOLS/settings.json" "$GEN" "$DRY" "${REPOS[@]}" <<'PY'
 import json, sys
-base, out, repos = sys.argv[1], sys.argv[2], sys.argv[3:]
+base, out, dry, repos = sys.argv[1], sys.argv[2], sys.argv[3] == "1", sys.argv[4:]
 s = json.load(open(base))
+deny = s["permissions"]["deny"]
 for r in repos:
-    s["permissions"]["deny"] += [f"Edit(/{r}/**)", f"Write(/{r}/**)"]
+    deny += [f"Edit(/{r}/**)", f"Write(/{r}/**)"]
+if dry:
+    deny += [
+        "Bash(gh issue create:*)", "Bash(gh issue comment:*)", "Bash(gh issue edit:*)",
+        "Bash(gh pr create:*)", "Bash(~/.claude/tools/ticket-agent/push-branch.sh)",
+        "Bash(~/.claude/tools/ticket-agent/state.sh set:*)", "Bash(~/.claude/tools/ticket-agent/signals.sh done:*)",
+        "Bash(git commit:*)", "Bash(git worktree:*)", "mcp__telegram__send_message",
+    ]
 json.dump(s, open(out, "w"), ensure_ascii=False, indent=2)
 PY
 
