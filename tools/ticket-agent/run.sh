@@ -90,11 +90,29 @@ PY
 
 # Долгоживущий токен для безлюдного режима (`claude setup-token`): строка
 # CLAUDE_CODE_OAUTH_TOKEN=… в auth.env (chmod 600). Без него — обычный вход CLI, который протухает.
+# Файл не исполняется: берём значение после «CLAUDE_CODE_OAUTH_TOKEN=» и склеиваем строки-продолжения
+# (setup-token переносит длинный токен, и при копировании он может лечь в несколько строк).
 if [ -f "$DIR/auth.env" ]; then
-  set -a
-  # shellcheck disable=SC1091
-  . "$DIR/auth.env"
-  set +a
+  if ! TOKEN=$(python3 -I - "$DIR/auth.env" <<'PY'
+import sys
+lines = [l.strip() for l in open(sys.argv[1]) if l.strip() and not l.lstrip().startswith("#")]
+key = "CLAUDE_CODE_OAUTH_TOKEN="
+for i, l in enumerate(lines):
+    if l.startswith(key):
+        parts = [l[len(key):].strip().strip("'\"")]
+        for cont in lines[i + 1:]:
+            if "=" in cont:
+                break
+            parts.append(cont.strip("'\""))
+        print("".join(parts))
+        sys.exit(0)
+sys.exit("в auth.env нет строки CLAUDE_CODE_OAUTH_TOKEN=")
+PY
+  ); then
+    echo "!!! $(date '+%F %T') $ROLE: $TOKEN" >> "$LOG"
+    exit 1
+  fi
+  export CLAUDE_CODE_OAUTH_TOKEN="$TOKEN"
 fi
 
 cd "$DIR"
