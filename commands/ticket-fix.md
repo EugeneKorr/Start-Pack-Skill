@@ -50,4 +50,4 @@ push и PR). Настройки: `~/.claude/ticket-agent/config.json`, реес�
 
 ## Журнал
 Раздел «фикс HH:MM» в журнал через
-`~/.claude/tools/ticket-agent/journal.sh <<'EOF' … EOF` (писать в `~/.claude` напрямую нельзя): тикеты, PR, время, неудачи.
+`~/.claude/tools/ticket-agent/journal.sh <<'EOF' … EOF` (писать в `~/.claude` напрямую нельзя; время записи скрипт ставит сам — в заголовке раздела его не пиши): тикеты, PR, время, неудачи.

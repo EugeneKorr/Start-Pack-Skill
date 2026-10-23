@@ -4,4 +4,5 @@
 set -euo pipefail
 RUNS="$HOME/.claude/ticket-agent/runs"
 mkdir -p "$RUNS"
-{ cat; echo; } >> "$RUNS/$(date +%Y-%m-%d).md"
+# Время ставит скрипт, а не модель: по нему сводка ищет простои.
+{ echo "<!-- записано $(date '+%F %H:%M') -->"; cat; echo; } >> "$RUNS/$(date +%Y-%m-%d).md"
