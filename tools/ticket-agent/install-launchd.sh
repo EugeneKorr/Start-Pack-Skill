@@ -38,9 +38,12 @@ case "${1:-}" in
     [ -f "$DIR/projects/vega.json" ] || cp "$TOOLS/vega.project.example.json" "$DIR/projects/vega.json"
     plist com.vladimir.ticket-agent.watch   "<key>StartInterval</key><integer>300</integer>" /usr/bin/python3 -I "$TOOLS/watch.py"
     plist com.vladimir.ticket-agent.collect "<key>StartCalendarInterval</key><array>$(at 9 0)$(at 14 0)$(at 19 0)</array>" "$TOOLS/run.sh" collect
-    plist com.vladimir.ticket-agent.fix     "<key>StartCalendarInterval</key><array>$(at 3 0)</array>" "$TOOLS/run.sh" fix
     plist com.vladimir.ticket-agent.digest  "<key>StartCalendarInterval</key><array>$(at 7 30)</array>" "$TOOLS/run.sh" digest
+    # Отдельного ночного фикса нет (26.10): фиксер запускается из run.sh после каждого сбора.
+    launchctl bootout "gui/$UIDN/com.vladimir.ticket-agent.fix" 2>/dev/null || true
+    rm -f "$LA/com.vladimir.ticket-agent.fix.plist"
     for l in $LABELS; do
+      [ "$l" = "com.vladimir.ticket-agent.fix" ] && continue
       launchctl bootout "gui/$UIDN/$l" 2>/dev/null || true
       launchctl bootstrap "gui/$UIDN" "$LA/$l.plist"
     done

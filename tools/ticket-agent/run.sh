@@ -122,11 +122,12 @@ claude -p "/ticket-$ROLE $EXTRA" \
   --add-dir "$DIR" "$WORKTREES" "${REPOS[@]}" \
   -n "🤖 агент: $ROLE $(date +%d.%m\ %H:%M)" < /dev/null >> "$LOG" 2>&1 || echo "!!! exit $?" >> "$LOG"
 
-# Срочное: watch.py оставляет метку p0.pending — после сбора сразу фиксер.
-# Метка переживает занятую блокировку: если сбор по сигналу не стартовал, её подхватит следующий сбор.
-if [ "$ROLE" = "collect" ] && [ -f "$DIR/p0.pending" ] && [[ "$EXTRA" != *--dry* ]]; then
+# После каждого боевого сбора — фиксер (решение 26.10: не ночью, а 3 раза в день небольшими порциями).
+# Метка p0.pending от watch.py больше ничего не меняет в запуске (P0 и так первые в очереди),
+# снимаем её, чтобы не копилась. Без fix_enabled фиксер выходит сразу, не вызывая модель.
+if [ "$ROLE" = "collect" ] && [[ "$EXTRA" != *--dry* ]]; then
   rm -f "$DIR/p0.pending"
   rmdir "$LOCKDIR" 2>/dev/null || true
   trap - EXIT
-  exec "$0" fix --p0
+  exec "$0" fix
 fi
