@@ -83,7 +83,7 @@ if dry:
         "Bash(gh issue create:*)", "Bash(gh issue comment:*)", "Bash(gh issue edit:*)",
         "Bash(gh pr create:*)", "Bash(~/.claude/tools/ticket-agent/push-branch.sh)",
         "Bash(~/.claude/tools/ticket-agent/state.sh set:*)", "Bash(~/.claude/tools/ticket-agent/signals.sh done:*)",
-        "Bash(git commit:*)", "Bash(git worktree:*)", "mcp__telegram__send_message",
+        "Bash(git commit:*)", "Bash(git worktree:*)", "Bash(~/.claude/tools/ticket-agent/notify.py:*)",
     ]
 json.dump(s, open(out, "w"), ensure_ascii=False, indent=2)
 PY
