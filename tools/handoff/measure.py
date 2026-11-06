@@ -32,7 +32,9 @@ HANDOFF_DIR = HOME / ".claude" / "handoff"
 LIMITS_SH = HOME / ".claude" / "tools" / "usage" / "limits.sh"
 STATUSLINE_FILE = HOME / ".claude" / "usage" / "latest.json"
 
-GAUGE_MIN_CTX = 150_000       # ниже — счётчик молчит
+GAUGE_MIN_CTX = 200_000       # ниже — счётчик молчит (с 04.11: было 150 тыс.)
+GAUGE_LEVELS = [(400_000, "🔴"), (300_000, "🟡"), (200_000, "🟢")]  # цвет строки по объёму контекста
+GAUGE_REMIND_CTX = 350_000    # с этого объёма — напоминание о /handoff-ingest
 GAUGE_WINDOW_WARN = 0.80      # доля окна модели, после которой предупреждаем об автосжатии
 HANDOFF_CALLS = 5             # обращений с полным контекстом у хендоффа-«слепка»
 DEFAULT_CALLS_PER_Q = 7       # пока в сессии меньше 3 вопросов
@@ -480,23 +482,16 @@ def cmd_gauge() -> None:
                     per_q[-1] += 1
     if last_ctx < GAUGE_MIN_CTX:
         return
-    recent = [n for n in per_q[-RECENT_QUESTIONS - 1:-1] if n > 0] if len(per_q) > 1 else []
-    k = round(statistics.mean(recent)) if len(recent) >= 3 else DEFAULT_CALLS_PER_Q
-    k_note = "" if len(recent) >= 3 else " (оценка)"
-    c0, _ = new_session_estimate(main)
-    saving = k * (last_ctx - c0)
-    payback = HANDOFF_CALLS * last_ctx / saving if saving > 0 else 0
-    parts = [f"📏 контекст {fmt_k(last_ctx)}"]
-    if payback > 0:
-        parts.append(f"хендофф окупится через {max(1, round(payback))} вопр.")
-    if k >= 5:
-        parts.append(f"или /effort medium — ≈{max(3, round(k * 0.55))} обращений на вопрос вместо {k}{k_note}")
+    emoji = next(e for lim, e in GAUGE_LEVELS if last_ctx >= lim)
+    parts = [f"{emoji} контекст {fmt_k(last_ctx)}"]
     window = model_window(model)
     if last_ctx >= GAUGE_WINDOW_WARN * window:
         parts.append(f"⚠️ {int(100 * last_ctx / window)}% окна — скоро автосжатие, хендофф сейчас")
     text = " · ".join(parts)
+    remind = ("\nОтдельно, НЕ для шапки: контекст ≥350 тыс. — в конце ответа одной строкой напомни о /handoff-ingest."
+              if last_ctx >= GAUGE_REMIND_CTX else "")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit",
-                      "additionalContext": f"Счётчик контекста (вторая строка шапки, как есть): {text}"}},
+                      "additionalContext": f"Счётчик контекста (вторая строка шапки, как есть): {text}{remind}"}},
                      ensure_ascii=False))
 
 
