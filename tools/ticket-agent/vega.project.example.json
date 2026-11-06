@@ -1,0 +1,58 @@
+{
+  "name": "vega",
+  "title": "Vega",
+  "enabled": true,
+  "fix_enabled": false,
+  "issues_repo": "EugeneKorr/vova-workspace",
+  "issue_labels": ["vega"],
+  "repos": [
+    {
+      "key": "crm",
+      "slug": "EugeneKorr/crmvega",
+      "path": "/Users/vladimir/crm",
+      "label": "crm",
+      "area": "СРМ операторов: заявки, чат, канбан, Люси; backend Express, frontend React, Edge-функции Supabase",
+      "forbidden_paths": ["supabase/functions/bot-handler/"],
+      "checks": [
+        "cd backend && npm ci && npx tsc --noEmit && npm test",
+        "cd frontend && npm ci && npx tsc --noEmit && npm test",
+        "deno test --node-modules-dir=auto supabase/functions"
+      ],
+      "notes": "Edge-функции деплоятся вручную. 4 теста analyze-deal падают и на main (23.10) — не своя регрессия, не чинить попутно."
+    },
+    {
+      "key": "calculator",
+      "slug": "Volight-14/vega-rates-calculator",
+      "path": "/Users/vladimir/Projects/vega-rates-calculator",
+      "label": "vega",
+      "area": "Расчёт курсов пар, строки таблицы Rate в Bubble, BestChange; Python FastAPI",
+      "forbidden_paths": [],
+      "checks": [
+        "uv venv .venv --python 3.12 && uv pip install --python .venv/bin/python -e '.[dev]'",
+        ".venv/bin/pytest",
+        ".venv/bin/ruff check .",
+        ".venv/bin/mypy app/"
+      ],
+      "notes": "Мерж = автодеплой. Правка старта (app/main.py, конфиг) — обязательно tests/test_startup_smoke.py и пометка в PR «перед мержем — смоук старта с прод-флагами»."
+    },
+    {
+      "key": "mirror",
+      "slug": "Volight-14/vega-exchange-",
+      "path": "/Users/vladimir/Projects/vega-exchange-",
+      "label": "vega",
+      "area": "Зеркало: Telegram Mini App клиента для РФ (React, Supabase)",
+      "forbidden_paths": [],
+      "checks": ["npm ci", "CI=true npm test -- --watchAll=false", "npm run build"],
+      "notes": "Push в main = автодеплой."
+    }
+  ],
+  "fix_never": [
+    "Bubble (бабл): только разбор; правки через Bubble MCP в test делает Владимир",
+    "бот СРМ (supabase/functions/bot-handler): не трогаем с 21.10"
+  ],
+  "sources": [
+    { "module": "telegram-chat", "chat_id": -1003335794530, "name": "VEX обратная связь для разработчиков", "kind": "people" },
+    { "module": "telegram-chat", "chat_id": 7256031940, "name": "@nerpaservicebot", "kind": "alerts" },
+    { "module": "github-issues", "repo": "EugeneKorr/vova-workspace", "labels": ["crm", "vega"], "skip_authors": ["Volight-14"] }
+  ]
+}
