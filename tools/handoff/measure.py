@@ -375,20 +375,52 @@ def cmd_prep(sid: str) -> None:
 
 # ---------- query-prep: что принимать новой сессии ----------
 
+def remote_ref(project: Path) -> str:
+    """origin/<основная ветка> после свежего fetch; '' — если git/сеть недоступны или HANDOFF_LOCAL=1 (рубильник)."""
+    if os.environ.get("HANDOFF_LOCAL") == "1":
+        return ""
+    sh(["git", "fetch", "-q", "origin"], str(project))
+    ref = sh(["git", "symbolic-ref", "-q", "--short", "refs/remotes/origin/HEAD"], str(project)) or "origin/main"
+    return ref if sh(["git", "rev-parse", "-q", "--verify", ref], str(project)) else ""
+
+
 def cmd_query_prep(sid: str) -> None:
     project = Path.cwd()
     main = find_transcript(sid)
     s = collect(main)
-    threads = project / "docs" / "handoff"
     print(f"ЭТА СЕССИЯ: {sid} · стартовый контекст {fmt_k(s['first_ctx'])} · транскрипт {main}")
-    notes = sorted(threads.glob("*.md")) if threads.is_dir() else [project / "docs" / "HANDOFF.md"]
-    print(f"ФОРМАТ: {'по нитям' if threads.is_dir() else 'один файл'}")
+    ref = remote_ref(project)
+    if ref:
+        # записки — из origin: папка может стоять без ветки на старом коммите (06.11: HEAD 24e3116,
+        # git pull молча не работал, query-prep дважды показал давно принятые записки как непринятые)
+        g = lambda *a: sh(["git", *a], str(project))
+        rsha, hsha = g("rev-parse", "--short", ref), g("rev-parse", "--short", "HEAD")
+        branch = g("symbolic-ref", "-q", "--short", "HEAD") or "без ветки"
+        print(f"ИСТОЧНИК: {ref} {rsha} — записки читаются оттуда, не из папки")
+        if rsha != hsha:
+            print(f"⚠️ ПАПКА ОТСТАЁТ: {branch} {hsha} ≠ {ref} {rsha}. Записку читать `git show {ref}:<путь>`, "
+                  f"принимать (правка статуса, коммит, push) — во временном worktree от {ref}, ветку папки не трогать")
+        names = [n for n in g("ls-tree", "--name-only", ref, "docs/handoff/").splitlines() if n.endswith(".md")]
+        threaded = bool(names)
+        notes = sorted(names) if threaded else ["docs/HANDOFF.md"]
+        read = lambda p: g("show", f"{ref}:{p}")
+    else:
+        print("ИСТОЧНИК: локальная папка (git/сеть недоступны или HANDOFF_LOCAL=1) — статусы могут быть устаревшими")
+        threads = project / "docs" / "handoff"
+        threaded = threads.is_dir()
+        notes = ([str(p.relative_to(project)) for p in sorted(threads.glob("*.md"))] if threaded
+                 else ["docs/HANDOFF.md"])
+        read = lambda p: (project / p).read_text(encoding="utf-8") if (project / p).exists() else ""
+    print(f"ФОРМАТ: {'по нитям' if threaded else 'один файл'}")
     for n in notes:
-        if not n.exists() or n.name in ("INDEX.md", "README.md"):
+        if Path(n).name in ("INDEX.md", "README.md"):
             continue
-        head = n.read_text(encoding="utf-8").splitlines()[:4]
+        text = read(n)
+        if not text:
+            continue
+        head = text.splitlines()[:4]
         status = next((h for h in head if h.startswith("Статус:")), "Статус: ?")
-        print(f"ЗАПИСКА: {n.relative_to(project)} · {status} · {head[0][:90] if head else ''}")
+        print(f"ЗАПИСКА: {n} · {status} · {head[0][:90] if head else ''}")
     # неразложенные слепки этого проекта (агент упал или сессию закрыли раньше)
     proj_key = main.parent.name
     for d in sorted(HANDOFF_DIR.glob("*/dump.md")):
