@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "worktrees_dir": "/Users/vladimir/agent-worktrees",
+  "max_tickets_per_run": 2,
+  "ticket_minutes": 45,
+  "digest_chat": "me"
+}
