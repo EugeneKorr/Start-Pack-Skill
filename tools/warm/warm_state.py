@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 STATE_DIR = Path.home() / ".claude" / "warm"
-INTERVAL_MIN = 55
+INTERVAL_MIN = 50  # кэш живёт 60 мин; запас 10 мин на сдвиг планировщика (17.11: при 55 два пинга опоздали и сами оплатили перезапись)
 CACHE_TTL_MIN = 60
 DEFAULT_PINGS = 5
 MAX_PINGS = 8
