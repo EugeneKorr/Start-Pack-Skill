@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Скользящий прогрев кэша (/warm): состояние, расписание и решение «пинг или пропуск».
 
-Схема (с 19.11.2026): один повторяющийся таймер Claude Code каждые 5 минут шлёт в сессию сообщение
+Схема (с 19.11.2026): один повторяющийся таймер Claude Code каждые 10 минут шлёт в сессию сообщение
 «Пинг прогрева кэша…». Хук UserPromptSubmit решает, нужен ли пинг: если нужен — пропускает сообщение
 к модели, если нет — отклоняет его до модели (бесплатно, проверено 19.11). Любое другое сообщение в сессию
 (твоё, уведомление фоновой задачи, от соседней сессии) вызывает обращение к модели, то есть само греет кэш:
@@ -27,12 +27,12 @@ from pathlib import Path
 from typing import Any
 
 STATE_DIR = Path(os.environ.get("WARM_STATE_DIR") or Path.home() / ".claude" / "warm")
-INTERVAL_MIN = 50   # шаг пингов; кэш живёт 60 мин, запас 10 мин на сдвиг планировщика
-DUE_MIN = 45        # пинг нужен, если с последнего обращения к модели прошло не меньше (тик раз в 5 мин)
+INTERVAL_MIN = 45   # расчётный шаг пингов для «warm до» (тик раз в 10 мин, пинг через 38–48 мин); кэш живёт 60 мин
+DUE_MIN = 38        # пинг нужен, если с последнего обращения к модели прошло не меньше; тик раз в 10 мин и сдвиг планировщика до 5 мин оставляют запас до 60
 CACHE_TTL_MIN = 60
 DEFAULT_PINGS = 5
 MAX_PINGS = 8
-TICK_CRON = "*/5 * * * *"
+TICK_CRON = "*/10 * * * *"
 TICK_PREFIX = "Пинг прогрева кэша"
 
 
@@ -152,7 +152,7 @@ def handle_tick(f: Path, st: dict[str, Any]) -> None:
     t = now()
     n, done = int(st["n"]), int(st.get("done", 0))
     if done >= n or t - base_time(st) < DUE_MIN * 60:
-        emit(block="прогрев: пинг не нужен")
+        emit(block="пинг не нужен")
         return
     st["done"], st["last_ping"] = done + 1, t
     save(f, st)
@@ -185,7 +185,7 @@ def cmd_hook() -> None:
         st = load(f) if f and f.exists() else None
         if st is None:
             if is_tick:
-                emit(block="прогрев: таймер без состояния (остался от прошлого запуска)")
+                emit(block="таймер без состояния")
             return
         if not is_sliding(st):
             handle_legacy(st)
